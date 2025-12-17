@@ -1,0 +1,160 @@
+version: '3'
+services:
+  # SNMPv3 Containers
+  snmpv3-1:
+    image: tandrup/snmpsim
+    command:
+      - snmpsimd.py
+      - --agent-udpv4-endpoint=0.0.0.0:161
+      - --process-user=nobody
+      - --process-group=nogroup
+      - --v3-only
+      - --v3-user=pendekarayam
+      - --v3-auth-key=pendekarayam
+      - --v3-auth-proto=SHA256
+      - --v3-priv-key=pendekarayam
+      # - --v3-security-level=authPriv 
+      - --v3-priv-proto=DES
+    ports:
+      - "1161:161/udp"
+    volumes:
+      - ./data/pendekarayam.snmprec:/usr/local/snmpsim/data/pendekarayam.snmprec
+
+  # snmpv3-2:
+  #   image: tandrup/snmpsim
+  #   command:
+  #     - snmpsimd.py
+  #     - --agent-udpv4-endpoint=0.0.0.0:1162
+  #     - --process-user=nobody
+  #     - --process-group=nogroup
+  #     - --v3-user=simulator
+  #     - --v3-auth-key=auctoritas
+  #     - --v3-auth-proto=MD5
+  #     - --v3-priv-key=privatus
+  #     - --v3-priv-proto=AES
+  #   ports:
+  #     - "1162:1162/udp"
+  #   volumes:
+  #     - ./data:/usr/local/snmpsim/data
+
+  # snmpv3-3:
+  #   image: tandrup/snmpsim
+  #   command:
+  #     - snmpsimd.py
+  #     - --agent-udpv4-endpoint=0.0.0.0:1163
+  #     - --process-user=nobody
+  #     - --process-group=nogroup
+  #     - --v3-user=simulator
+  #     - --v3-auth-key=auctoritas
+  #     - --v3-auth-proto=MD5
+  #     - --v3-priv-key=privatus
+  #     - --v3-priv-proto=AES
+  #   ports:
+  #     - "1163:1163/udp"
+  #   volumes:
+  #     - ./data:/usr/local/snmpsim/data
+
+  # snmpv3-4:
+  #   image: tandrup/snmpsim
+  #   command:
+  #     - snmpsimd.py
+  #     - --agent-udpv4-endpoint=0.0.0.0:1164
+  #     - --process-user=nobody
+  #     - --process-group=nogroup
+  #     - --v3-user=simulator
+  #     - --v3-auth-key=auctoritas
+  #     - --v3-auth-proto=MD5
+  #     - --v3-priv-key=privatus
+  #     - --v3-priv-proto=AES
+  #   ports:
+  #     - "1164:1164/udp"
+  #   volumes:
+  #     - ./data:/usr/local/snmpsim/data
+
+  # snmpv3-5:
+  #   image: tandrup/snmpsim
+  #   command:
+  #     - snmpsimd.py
+  #     - --agent-udpv4-endpoint=0.0.0.0:1165
+  #     - --process-user=nobody
+  #     - --process-group=nogroup
+  #     - --v3-user=simulator
+  #     - --v3-auth-key=auctoritas
+  #     - --v3-auth-proto=MD5
+  #     - --v3-priv-key=privatus
+  #     - --v3-priv-proto=AES
+  #   ports:
+  #     - "1165:1165/udp"
+  #   volumes:
+  #     - ./data:/usr/local/snmpsim/data
+
+  # SNMPv2c Containers
+  snmpv2c-1:
+    image: tandrup/snmpsim
+    command:
+      - snmpsimd.py
+      - --agent-udpv4-endpoint=0.0.0.0:162
+      - --process-user=nobody
+      - --process-group=nogroup
+      - --v2c-arch
+    ports:
+      - "2161:162/udp"
+    volumes:
+      - ./data/pendekarkambing.snmprec:/usr/local/snmpsim/data/pendekarkambing.snmprec
+
+  # snmpv2c-2:
+  #   image: tandrup/snmpsim
+  #   command:
+  #     - snmpsimd.py
+  #     - --agent-udpv4-endpoint=0.0.0.0:2162
+  #     - --process-user=nobody
+  #     - --process-group=nogroup
+  #     - --v2c-arch
+  #     - --v2c-read=pendekarkambing
+  #   ports:
+  #     - "2162:2162/udp"
+  #   volumes:
+  #     - ./data:/usr/local/snmpsim/data
+
+  # snmpv2c-3:
+  #   image: tandrup/snmpsim
+  #   command:
+  #     - snmpsimd.py
+  #     - --agent-udpv4-endpoint=0.0.0.0:2163
+  #     - --process-user=nobody
+  #     - --process-group=nogroup
+  #     - --v2c-arch
+  #     - --v2c-read=pendekarkambing
+  #   ports:
+  #     - "2163:2163/udp"
+  #   volumes:
+  #     - ./data:/usr/local/snmpsim/data
+
+  # snmpv2c-4:
+  #   image: tandrup/snmpsim
+  #   command:
+  #     - snmpsimd.py
+  #     - --agent-udpv4-endpoint=0.0.0.0:2164
+  #     - --process-user=nobody
+  #     - --process-group=nogroup
+  #     - --v2c-arch
+  #     - --v2c-read=pendekarkambing
+  #   ports:
+  #     - "2164:2164/udp"
+  #   volumes:
+  #     - ./data:/usr/local/snmpsim/data
+
+  # snmpv2c-5:
+  #   image: tandrup/snmpsim
+  #   command:
+  #     - snmpsimd.py
+  #     - --agent-udpv4-endpoint=0.0.0.0:2165
+  #     - --process-user=nobody
+  #     - --process-group=nogroup
+  #     - --v2c-arch
+  #     - --v2c-read=pendekarkambing
+  #   ports:
+  #     - "2165:2165/udp"
+  #   volumes:
+  #     - ./data:/usr/local/snmpsim/data
+
