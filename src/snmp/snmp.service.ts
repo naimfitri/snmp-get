@@ -6,10 +6,18 @@ import {
 import * as snmp from 'net-snmp';
 import { SnmpV3GetDto, AuthProtocol, PrivProtocol } from './dto/snmpV3.get.dto';
 import { SnmpGetDto, HostConfig } from './dto/snmp.get.dto';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
+import { SnmpFail, SnmpSuccess } from './schema/snmp.log.schema';
 
 @Injectable()
 export class SnmpService {
   private readonly logger = new Logger(SnmpService.name);
+
+  constructor(
+    @InjectModel(SnmpFail.name) private snmpFailModel: Model<SnmpFail>,
+    @InjectModel(SnmpSuccess.name) private snmpSuccessModel: Model<SnmpSuccess>,
+  ) {}
 
   private createV3Session(dto: SnmpV3GetDto) {
     const options = {
@@ -86,12 +94,17 @@ export class SnmpService {
             community: hostConfig.community,
             data: result,
           };
+          
+          this.logSuccess(hostConfig.host, hostConfig.community, result);
+
         })
         .catch((error) => {
           results[key] = {
             community: hostConfig.community,
             error: error.message,
           };
+
+          this.logFailure(hostConfig.host, hostConfig.community, error);
         });
     });
 
@@ -102,28 +115,33 @@ export class SnmpService {
     return results;
   }
 
-  private queryHost(
-    host: string,
-    port: number,
-    community: string,
-    oids: string[],
-  ) {
+  private queryHost(host: string,port: number,community: string,oids: string[],) {
     return new Promise((resolve, reject) => {
       const session = this.createV2cSession(host, port, community);
 
+      const start = Date.now();
+
       session.get(oids, (err, varbinds) => {
+        const responseTimeMs = Date.now() - start;
+
         session.close();
 
         if (err) {
-          return reject(new InternalServerErrorException(err.message));
+          return reject({
+            reachable: false,
+            responseTimeMs,
+            error: err.message,
+          });
         }
 
-        const result = varbinds.map((vb) => ({
-          oid: vb.oid,
-          value: vb.value?.toString(),
-        }));
-
-        resolve(result);
+        resolve({
+          reachable: true,
+          responseTimeMs,
+          data: varbinds.map((vb) => ({
+            oid: vb.oid,
+            value: vb.value?.toString(),
+          })),
+        });
       });
     });
   }
@@ -149,5 +167,34 @@ export class SnmpService {
         resolve(result);
       });
     });
+  }
+
+  private async logSuccess(ip: string, communityString: string, result:any) {
+    try {
+      await this.snmpSuccessModel.create({
+        ip,
+        communityString,
+        status: 'success',
+        responseTimeMs: result.responseTimeMs,
+        data: result.data || result.varbinds,
+      });
+    } catch (error) {
+      this.logger.error(`Failed to log success: ${error.message}`);
+    }
+  }
+
+  private async logFailure(ip: string, communityString: string, error:any) {
+    try {
+      await this.snmpFailModel.create({
+        ip,
+        communityString,
+        status: 'fail',
+        responseTimeMs: error.responseTimeMs,
+        remark: error.error || error.message,
+        error,
+      });
+    } catch (dbError) {
+      this.logger.error(`Failed to log failure: ${dbError.message}`);
+    }
   }
 }

@@ -32,8 +32,8 @@ export class SnmpGetDto {
   @Type(() => HostConfig)
   @ApiProperty({
     example: [
-      { host: '127.0.0.1', community: 'public', port: 1161 },
-      { host: '192.168.1.1', community: 'private', port: 1161 }
+      { host: '127.0.0.1', community: 'public', port: 2161 },
+      { host: 'localhost', community: 'pendekarkambing', port: 2161 }
     ],
     description: 'Array of host configurations',
     type: [HostConfig],
@@ -42,7 +42,7 @@ export class SnmpGetDto {
 
   @IsArray()
   @ApiProperty({
-    example: ['1.3.6.1.2.1.1.1.0'],
+    example: ['1.3.6.1.2.1.1.3.0','1.3.6.1.2.1.1.5.0'],
     description: 'List of OIDs to fetch',
     type: [String],
   })
