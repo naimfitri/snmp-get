@@ -93,12 +93,12 @@ services:
     image: tandrup/snmpsim
     command:
       - snmpsimd.py
-      - --agent-udpv4-endpoint=0.0.0.0:162
+      - --agent-udpv4-endpoint=0.0.0.0:161
       - --process-user=nobody
       - --process-group=nogroup
       - --v2c-arch
     ports:
-      - "2161:162/udp"
+      - "161:161/udp"
     volumes:
       - ./data/pendekarkambing.snmprec:/usr/local/snmpsim/data/pendekarkambing.snmprec
 
