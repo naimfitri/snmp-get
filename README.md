@@ -1,34 +1,75 @@
-# NestJS SNMP Project
+# SNMP Monitoring Service
 
-A progressive [Node.js](http://nodejs.org) framework for building efficient and scalable server-side applications.
+A NestJS-based SNMP monitoring application that provides multiple interfaces for querying SNMP agents. This service supports SNMPv2c and SNMPv3 protocols with comprehensive logging and monitoring capabilities.
 
-[![NPM Version](https://img.shields.io/npm/v/@nestjs/core.svg)](https://www.npmjs.com/~nestjscore)
-[![Package License](https://img.shields.io/npm/l/@nestjs/core.svg)](https://www.npmjs.com/~nestjscore)
-[![NPM Downloads](https://img.shields.io/npm/dm/@nestjs/common.svg)](https://www.npmjs.com/~nestjscore)
+## Overview
 
-## Description
+This application provides two main modules for SNMP operations:
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+1. **SNMP Module** - Direct SNMP library integration using net-snmp
+2. **SNMP-CMD Module** - Command-line based SNMP queries using system snmp tools
 
-## Project Setup
+## Project Structure
+
+```
+src/
+├── snmp/                    # Direct SNMP library module
+│   ├── snmp.controller.ts   # SNMP API endpoints
+│   ├── snmp.service.ts      # SNMP query logic
+│   ├── snmp.module.ts       # Module definition
+│   ├── dto/
+│   │   ├── snmp.get.dto.ts  # SNMPv2c request DTO
+│   │   └── snmpV3.get.dto.ts # SNMPv3 request DTO
+│   └── schema/
+│       └── snmp.log.schema.ts # MongoDB logging schemas
+├── snmp-cmd/                # Command-line SNMP module
+│   ├── snmp-cmd.controller.ts
+│   ├── snmp-cmd.service.ts
+│   ├── snmp-cmd.module.ts
+│   ├── dto/
+│   │   └── snmp.request.dto.ts
+│   └── schema/
+│       └── snmp-cmd.log.schema.ts
+└── app.module.ts            # Main application module
+```
+
+## Installation
 
 ```bash
 npm install
 ```
 
-## Compile and Run the Project
+## Setup & Configuration
 
-### Development
+### Environment Variables
+
+Create a `.env` file or set environment variables for MongoDB connection:
 
 ```bash
-npm run start
+MONGODB_URI=mongodb://localhost:27017/snmp
 ```
 
-### Watch Mode
+### Docker Compose (Testing)
+
+The project includes Docker Compose configuration for SNMP simulator containers:
+
+```bash
+docker-compose up
+```
+
+This sets up:
+- **SNMPv2c** simulator on port 161 (community: `pendekarkambing`)
+- **SNMPv3** simulator on port 1161 (user: `pendekarayam`)
+
+## Running the Application
+
+### Development Mode
 
 ```bash
 npm run start:dev
 ```
+
+Server runs on `http://localhost:3000` with hot-reload enabled.
 
 ### Production Mode
 
@@ -36,7 +77,145 @@ npm run start:dev
 npm run start:prod
 ```
 
-## Run Tests
+### Debug Mode
+
+```bash
+npm run start:debug
+```
+
+## API Documentation
+
+### SNMP Module
+
+#### SNMPv2c GET Request
+
+**Endpoint:** `POST /snmp/getSnmpV2`
+
+**Description:** Query multiple SNMP hosts simultaneously using SNMPv2c protocol.
+
+**Request Body:**
+```json
+{
+  "hosts": [
+    {
+      "host": "127.0.0.1",
+      "community": "public",
+      "port": 2161
+    }
+  ],
+  "oids": [
+    "1.3.6.1.2.1.1.1.0",
+    "1.3.6.1.2.1.1.3.0"
+  ]
+}
+```
+
+**Response:**
+```json
+{
+  "127.0.0.1:public": {
+    "community": "public",
+    "data": {
+      "reachable": true,
+      "responseTimeMs": 15,
+      "data": [
+        {
+          "oid": "1.3.6.1.2.1.1.1.0",
+          "value": "Linux localhost 5.15.0"
+        }
+      ]
+    }
+  }
+}
+```
+
+#### SNMPv3 GET Request
+
+**Endpoint:** `POST /snmp/getSnmpV3`
+
+**Description:** Query SNMP hosts using SNMPv3 protocol with authentication and privacy options.
+
+**Request Body:**
+```json
+{
+  "host": "127.0.0.1",
+  "port": 1161,
+  "username": "pendekarayam",
+  "authProtocol": "SHA256",
+  "authPassword": "pendekarayam",
+  "privProtocol": "DES",
+  "privPassword": "pendekarayam",
+  "securityLevel": "authPriv",
+  "oids": [
+    "1.3.6.1.2.1.1.1.0"
+  ]
+}
+```
+
+**Response:**
+```json
+[
+  {
+    "oid": "1.3.6.1.2.1.1.1.0",
+    "value": "Linux localhost 5.15.0"
+  }
+]
+```
+
+### SNMP-CMD Module
+
+#### Get SNMP Values
+
+**Endpoint:** `POST /snmp-cmd/get`
+
+**Description:** Retrieve SNMP values using command-line snmpget utility.
+
+**Request Body:**
+```json
+{
+  "ip": "192.168.1.1",
+  "community": "public",
+  "oids": [
+    "1.3.6.1.2.1.1.1.0",
+    "1.3.6.1.2.1.1.3.0"
+  ]
+}
+```
+
+**Response:**
+```json
+{
+  "192.168.1.1:public": {
+    "community": "public",
+    "data": {
+      "reachable": true,
+      "responseTimeMs": 23,
+      "data": [
+        {
+          "oid": "1.3.6.1.2.1.1.1.0",
+          "value": "Linux router 5.15.0"
+        },
+        {
+          "oid": "1.3.6.1.2.1.1.3.0",
+          "value": "1233456"
+        }
+      ]
+    }
+  }
+}
+```
+
+## Common OIDs
+
+| OID | Description |
+|-----|-------------|
+| 1.3.6.1.2.1.1.1.0 | System Description |
+| 1.3.6.1.2.1.1.3.0 | System Uptime |
+| 1.3.6.1.2.1.1.5.0 | System Name |
+| 1.3.6.1.2.1.25.3.2.1.5.1 | CPU Load |
+| 1.3.6.1.2.1.25.2.3.1.6 | Memory Size |
+
+## Testing
 
 ### Unit Tests
 
@@ -56,41 +235,68 @@ npm run test:e2e
 npm run test:cov
 ```
 
-## Deployment
+## Code Quality
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+### Linting
 
 ```bash
-npm install -g @nestjs/mau
-mau deploy
+npm run lint
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+### Formatting
 
-## Resources
+```bash
+npm run format
+```
 
-- [NestJS Documentation](https://docs.nestjs.com)
-- [Discord Channel](https://discord.gg/G7Qnnhy) - For questions and support
-- [Official Video Courses](https://courses.nestjs.com/)
-- [NestJS Mau](https://mau.nestjs.com) - Deploy to AWS
-- [NestJS Devtools](https://devtools.nestjs.com) - Visualize your application
-- [Enterprise Support](https://enterprise.nestjs.com)
-- [X (Twitter)](https://x.com/nestframework) - Follow for updates
-- [LinkedIn](https://linkedin.com/company/nestjs) - Stay in the loop
-- [Jobs Board](https://jobs.nestjs.com) - Job opportunities
+## Database Logging
 
-## Support
+The application logs all SNMP queries to MongoDB:
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+- **Success Logs:** `snmp_successes` collection
+- **Failure Logs:** `snmp_failures` collection
 
-## Stay in Touch
+Each log entry includes:
+- IP address
+- Community string
+- Response time
+- Query data
+- Timestamp
 
-- Author: [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website: [https://nestjs.com](https://nestjs.com/)
-- Twitter: [@nestframework](https://twitter.com/nestframework)
+## Requirements
+
+- Node.js >= 18
+- MongoDB (for logging)
+- SNMP simulator or SNMP-enabled devices (for testing)
+- For SNMP-CMD: `snmpget` utility installed on system
+
+## Troubleshooting
+
+### SNMP Query Timeouts
+- Check network connectivity to target host
+- Verify SNMP port (default: 161) is accessible
+- Confirm community string/credentials are correct
+
+### MongoDB Connection Errors
+- Ensure MongoDB is running
+- Verify MONGODB_URI environment variable
+- Check database permissions
+
+### Missing snmpget Command
+```bash
+# Ubuntu/Debian
+sudo apt-get install snmp
+
+# CentOS/RHEL
+sudo yum install net-snmp-utils
+```
 
 ## License
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+UNLICENSED
+
+## Support
+
+For issues and questions, refer to:
+- [NestJS Documentation](https://docs.nestjs.com)
+- [Net-SNMP Library](https://www.net-snmp.org/)
